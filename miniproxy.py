@@ -1,18 +1,13 @@
 import tornado.ioloop
 import tornado.web
 import requests
+from subprocess import call
+import os
 
 
 class MainHandler(tornado.web.RequestHandler):
     
-    def vars(self,url='',html=''):
-        self.urlSite = url
-        self.siteHTML = html
-
-    def mudaLocal(self):
-        
-        return self.siteHTML.replace(self.request.uri, self.urlSite+self.request.uri)
-
+    
     def get(self):
         self.write('<html><body><form action="/" method="POST">'
                    '<input type="text" name="siteAcessado">'
@@ -22,26 +17,38 @@ class MainHandler(tornado.web.RequestHandler):
 
     def post(self):
         self.set_header("Content-Type", "html")
-        site = requests.get(self.get_body_argument("siteAcessado"))
+        site = requests.get("http://"+self.get_body_argument("siteAcessado"))
         
-        self.vars()
 
         self.urlSite = self.get_body_argument("siteAcessado")
         self.siteHTML = site.content
+        call (['wget', '--recursive', '--no-clobber', '--page-requisites', '--html-extension', '--convert-links', '--restrict-file-names=windows', '--domains', self.urlSite, '--no-parent', '-nH', '--directory-prefix=static', 'http://'+self.urlSite+''])
 
+        
         self.write(self.siteHTML)
-
 
     def write_error(self, status_code, **kwargs):
         if status_code in [403, 500, 503]:
             self.write('Error %s' % status_code)
         elif status_code == 404:
-            import pdb;pdb.set_trace()
-            
-            self.write(self.mudaLocal())
+            print '\n\n\nque nada \n\n\n'
+            print os.path.abspath('static')
 
         else:
             self.write('BOOM!')
+    
+
+class PagePreProcessor(MainHandler):
+
+
+    def __init__(self):
+
+        self.urlSite = url
+        self.siteHTML = html
+
+
+
+
 
 
 class ErrorHandler(tornado.web.ErrorHandler, MainHandler):
@@ -51,15 +58,20 @@ class ErrorHandler(tornado.web.ErrorHandler, MainHandler):
     pass
 
 
+
+
+
 def make_app():
 
     settings = {
     'default_handler_class': ErrorHandler,
-    'default_handler_args': dict(status_code=404)
+    'default_handler_args': dict(status_code=404),
+    'static_path': os.path.abspath('static'),
+    'static_url_prefix': '/static/',
     }
     
     return tornado.web.Application([
-        (r"/", MainHandler),
+        (r"/", MainHandler,),
         ], **settings)
 
 
