@@ -22,7 +22,8 @@ class MainHandler(tornado.web.RequestHandler):
 
         self.urlSite = self.get_body_argument("siteAcessado")
         self.siteHTML = site.content
-        call (['wget', '--recursive', '--no-clobber', '--page-requisites', '--html-extension', '--convert-links', '--restrict-file-names=windows', '--domains', self.urlSite, '--no-parent', '-nH', '--directory-prefix=static', 'http://'+self.urlSite+''])
+        call (['C://GnuWin32/bin/wget.exe', '--recursive', '--no-clobber', '--page-requisites', '--html-extension', '--convert-links', '--restrict-file-names=windows', '--domains', self.urlSite, '--no-parent', '-nH', '--directory-prefix=static', 'http://'+self.urlSite+''])
+        call (['C://GnuWin32/bin/wget.exe', '--recursive', '--no-clobber', '--page-requisites', '--html-extension', '--convert-links', '--restrict-file-names=windows', '--domains', self.urlSite, '--no-parent', '-nH', '--directory-prefix=static', 'http://'+self.urlSite+''])
 
         
         self.write(self.siteHTML)
@@ -71,7 +72,8 @@ def make_app():
     }
     
     return tornado.web.Application([
-        (r"/", MainHandler,),
+        (r"/", MainHandler),
+        (r"/(.*)", tornado.web.StaticFileHandler, dict(path=settings['static_path'])),
         ], **settings)
 
 
